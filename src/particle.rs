@@ -65,8 +65,6 @@ impl ParticleSystem {
         let pressure_constant = self.pressure_constant;
         let rest_density = self.rest_density;
         let viscosity = self.viscosity;
-        let gravity = self.gravity;
-
         // Pre-collect positions to avoid borrow checker issues
         let positions: Vec<Vec3> = self.particles.iter().map(|p| p.position).collect();
         let velocities: Vec<Vec3> = self.particles.iter().map(|p| p.velocity).collect();
@@ -129,19 +127,6 @@ impl ParticleSystem {
         });
     }
 
-}
-
-// Move kernel function outside the impl to avoid borrow checker issues
-fn poly6_kernel(r: f32, h: f32) -> f32 {
-    // Poly6 kernel function for SPH
-    if r > h {
-        return 0.0;
-    }
-    let h2 = h * h;
-    let h3 = h2 * h;
-    315.0 / (64.0 * std::f32::consts::PI * h3) * (h2 - r * r).powi(3)
-}
-
     pub fn render(&self, buffer: &mut Vec<u32>, width: usize, height: usize) {
         // Clear buffer
         buffer.par_iter_mut().for_each(|pixel| *pixel = 0);
@@ -201,6 +186,18 @@ fn poly6_kernel(r: f32, h: f32) -> f32 {
             buffer[idx] = color;
         }
     }
+}
+
+// Move kernel function outside the impl to avoid borrow checker issues
+fn poly6_kernel(r: f32, h: f32) -> f32 {
+    // Poly6 kernel function for SPH
+    if r > h {
+        return 0.0;
+    }
+    let h2 = h * h;
+    let h3 = h2 * h;
+    315.0 / (64.0 * std::f32::consts::PI * h3) * (h2 - r * r).powi(3)
+}
 
 fn vec4_to_u32(color: Vec4) -> u32 {
     let r = (color.x * 255.0) as u32;
