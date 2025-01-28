@@ -113,7 +113,8 @@ fn main() {
                         let mut z = Complex::new(0.0, 0.0);
                         let mut i = 0;
                         while i < current_max_iter && z.norm_sqr() <= 4.0 {
-                            z = Complex::new(z.re.abs(), -z.im.abs()) * Complex::new(z.re.abs(), -z.im.abs()) + point;
+                            z = Complex::new(z.re.abs() as f64, -(z.im.abs() as f64)) * 
+                                Complex::new(z.re.abs() as f64, -(z.im.abs() as f64)) + point;
                             i += 1;
                         }
                         i
