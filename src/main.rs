@@ -7,12 +7,21 @@ const HEIGHT: usize = 600;
 const MAX_ITER: u32 = 200;
 const JULIA_C: Complex<f64> = Complex::new(-0.4, 0.6); // Julia set constant
 
+#[derive(PartialEq)]
+enum FractalType {
+    Mandelbrot,
+    Julia,
+    BurningShip,
+    Tricorn,
+    Newton
+}
+
 fn main() {
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
     let mut current_max_iter: u32 = 1;
-    let mut show_julia: bool = false;
+    let mut fractal_type = FractalType::Mandelbrot;
     let mut window = Window::new(
-        "Fractal Sets - Press SPACE to switch view, ESC to exit",
+        "Fractal Sets - Press 1-5 to switch fractals, ESC to exit",
         WIDTH,
         HEIGHT,
         WindowOptions::default(),
@@ -51,10 +60,22 @@ fn main() {
     }
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        // Toggle between Mandelbrot and Julia sets
-        if window.is_key_pressed(Key::Space, KeyRepeat::No) {
-            show_julia = !show_julia;
-            current_max_iter = 1; // Reset animation
+        // Switch between fractal types
+        if window.is_key_pressed(Key::Key1, KeyRepeat::No) {
+            fractal_type = FractalType::Mandelbrot;
+            current_max_iter = 1;
+        } else if window.is_key_pressed(Key::Key2, KeyRepeat::No) {
+            fractal_type = FractalType::Julia;
+            current_max_iter = 1;
+        } else if window.is_key_pressed(Key::Key3, KeyRepeat::No) {
+            fractal_type = FractalType::BurningShip;
+            current_max_iter = 1;
+        } else if window.is_key_pressed(Key::Key4, KeyRepeat::No) {
+            fractal_type = FractalType::Tricorn;
+            current_max_iter = 1;
+        } else if window.is_key_pressed(Key::Key5, KeyRepeat::No) {
+            fractal_type = FractalType::Newton;
+            current_max_iter = 1;
         }
 
         if current_max_iter < MAX_ITER {
@@ -69,22 +90,61 @@ fn main() {
                 let y = screen_y as f64 / HEIGHT as f64 * scale - scale/2.0 + offset_y;
 
                 let point = Complex::new(x, y);
-                let mut z = if show_julia {
-                    point // For Julia set, start with the point
-                } else {
-                    Complex::new(0.0, 0.0) // For Mandelbrot set, start at origin
+                let iter = match fractal_type {
+                    FractalType::Mandelbrot => {
+                        let mut z = Complex::new(0.0, 0.0);
+                        let mut i = 0;
+                        while i < current_max_iter && z.norm_sqr() <= 4.0 {
+                            z = z * z + point;
+                            i += 1;
+                        }
+                        i
+                    },
+                    FractalType::Julia => {
+                        let mut z = point;
+                        let mut i = 0;
+                        while i < current_max_iter && z.norm_sqr() <= 4.0 {
+                            z = z * z + JULIA_C;
+                            i += 1;
+                        }
+                        i
+                    },
+                    FractalType::BurningShip => {
+                        let mut z = Complex::new(0.0, 0.0);
+                        let mut i = 0;
+                        while i < current_max_iter && z.norm_sqr() <= 4.0 {
+                            z = Complex::new(z.re.abs(), -z.im.abs()) * Complex::new(z.re.abs(), -z.im.abs()) + point;
+                            i += 1;
+                        }
+                        i
+                    },
+                    FractalType::Tricorn => {
+                        let mut z = Complex::new(0.0, 0.0);
+                        let mut i = 0;
+                        while i < current_max_iter && z.norm_sqr() <= 4.0 {
+                            z = Complex::new(z.re, -z.im) * Complex::new(z.re, -z.im) + point;
+                            i += 1;
+                        }
+                        i
+                    },
+                    FractalType::Newton => {
+                        let mut z = point;
+                        let mut i = 0;
+                        while i < current_max_iter {
+                            // f(z) = z³ - 1
+                            // f'(z) = 3z²
+                            let fz = z * z * z - Complex::new(1.0, 0.0);
+                            let fpz = Complex::new(3.0, 0.0) * z * z;
+                            let next = z - fz / fpz;
+                            if (next - z).norm() < 1e-6 {
+                                break;
+                            }
+                            z = next;
+                            i += 1;
+                        }
+                        i
+                    }
                 };
-                let c = if show_julia {
-                    JULIA_C // For Julia set, use constant c
-                } else {
-                    point // For Mandelbrot set, use the point as c
-                };
-                
-                let mut iter = 0;
-                while iter < current_max_iter && z.norm_sqr() <= 4.0 {
-                    z = z * z + c;
-                    iter += 1;
-                }
 
                 *pixel = if iter == current_max_iter {
                     0x000000 // Black for points in the set
