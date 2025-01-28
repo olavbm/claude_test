@@ -1,4 +1,4 @@
-use minifb::{Key, Window, WindowOptions};
+use minifb::{Key, Window, WindowOptions, KeyRepeat};
 use num_complex::Complex;
 
 const WIDTH: usize = 1600; // Doubled width to show both sets
@@ -51,7 +51,7 @@ fn main() {
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         // Toggle between Mandelbrot and Julia sets
-        if window.is_key_pressed(Key::Space) {
+        if window.is_key_pressed(Key::Space, KeyRepeat::No) {
             show_julia = !show_julia;
             current_max_iter = 1; // Reset animation
         }
