@@ -1,5 +1,6 @@
 use minifb::{Key, Window, WindowOptions, KeyRepeat};
 use num_complex::Complex;
+use rayon::prelude::*;
 
 const WIDTH: usize = 1600; // Doubled width to show both sets
 const HEIGHT: usize = 800;
@@ -59,8 +60,8 @@ fn main() {
         if current_max_iter < MAX_ITER {
             current_max_iter += 1;
             
-            // Update the visualization with new max_iter
-            for (i, pixel) in buffer.iter_mut().enumerate() {
+            // Update the visualization in parallel
+            buffer.par_iter_mut().enumerate().for_each(|(i, pixel)| {
                 let screen_x = i % WIDTH;
                 let screen_y = i / WIDTH;
                 
@@ -103,7 +104,7 @@ fn main() {
                     let hue = (iter as f64 / current_max_iter as f64 * 360.0) as u32;
                     hsv_to_rgb(hue, 100, 100)
                 };
-            }
+            });
         }
 
         window
