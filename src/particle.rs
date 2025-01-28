@@ -60,17 +60,25 @@ impl ParticleSystem {
     }
 
     pub fn update(&mut self, dt: f32) {
-        // Calculate densities and pressures
+        let smoothing_radius = self.smoothing_radius;
+        let particle_mass = self.particle_mass;
+        let pressure_constant = self.pressure_constant;
+        let rest_density = self.rest_density;
+        let viscosity = self.viscosity;
+        let gravity = self.gravity;
+
+        // Pre-collect positions to avoid borrow checker issues
         let positions: Vec<Vec3> = self.particles.iter().map(|p| p.position).collect();
+        let velocities: Vec<Vec3> = self.particles.iter().map(|p| p.velocity).collect();
         
-        self.particles.par_iter_mut().enumerate().for_each(|(i, particle)| {
+        self.particles.par_iter_mut().for_each(|particle| {
             let mut density = 0.0;
             
             // Calculate density at particle's position
             for pos in &positions {
                 let r = particle.position.distance(*pos);
-                if r < self.smoothing_radius {
-                    density += self.particle_mass * self.kernel(r);
+                if r < smoothing_radius {
+                    density += particle_mass * poly6_kernel(r, smoothing_radius);
                 }
             }
             
@@ -78,17 +86,17 @@ impl ParticleSystem {
             let mut pressure_force = Vec3::ZERO;
             let mut viscosity_force = Vec3::ZERO;
             
-            for other in &self.particles {
-                let r = particle.position.distance(other.position);
-                if r > 0.0 && r < self.smoothing_radius {
-                    let dir = (other.position - particle.position) / r;
+            for (pos, vel) in positions.iter().zip(velocities.iter()) {
+                let r = particle.position.distance(*pos);
+                if r > 0.0 && r < smoothing_radius {
+                    let dir = (*pos - particle.position) / r;
                     
                     // Pressure force
-                    let pressure = self.pressure_constant * (density - self.rest_density);
-                    pressure_force += dir * pressure * self.particle_mass / density;
+                    let pressure = pressure_constant * (density - rest_density);
+                    pressure_force += dir * pressure * particle_mass / density;
                     
                     // Viscosity force
-                    viscosity_force += (other.velocity - particle.velocity) * self.viscosity;
+                    viscosity_force += (*vel - particle.velocity) * viscosity;
                 }
             }
             
@@ -121,16 +129,18 @@ impl ParticleSystem {
         });
     }
 
-    fn kernel(&self, r: f32) -> f32 {
-        // Poly6 kernel function for SPH
-        let h = self.smoothing_radius;
-        if r > h {
-            return 0.0;
-        }
-        let h2 = h * h;
-        let h3 = h2 * h;
-        315.0 / (64.0 * std::f32::consts::PI * h3) * (h2 - r * r).powi(3)
+}
+
+// Move kernel function outside the impl to avoid borrow checker issues
+fn poly6_kernel(r: f32, h: f32) -> f32 {
+    // Poly6 kernel function for SPH
+    if r > h {
+        return 0.0;
     }
+    let h2 = h * h;
+    let h3 = h2 * h;
+    315.0 / (64.0 * std::f32::consts::PI * h3) * (h2 - r * r).powi(3)
+}
 
     pub fn render(&self, buffer: &mut Vec<u32>, width: usize, height: usize) {
         // Clear buffer
