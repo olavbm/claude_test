@@ -42,9 +42,9 @@ impl ParticleSystem {
         
         for _ in 0..num_particles {
             particles.push(Particle::new(Vec3::new(
-                rng.gen_range(-1.0..1.0),
-                rng.gen_range(-1.0..1.0),
-                rng.gen_range(-1.0..1.0),
+                rng.gen_range(-0.3..0.3),  // Tighter horizontal spread
+                rng.gen_range(0.5..0.8),   // Start higher up
+                rng.gen_range(-0.3..0.3),  // Tighter depth spread
             )));
         }
 
