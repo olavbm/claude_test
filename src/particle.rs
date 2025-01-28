@@ -201,7 +201,6 @@ fn poly6_kernel(r: f32, h: f32) -> f32 {
             buffer[idx] = color;
         }
     }
-}
 
 fn vec4_to_u32(color: Vec4) -> u32 {
     let r = (color.x * 255.0) as u32;
