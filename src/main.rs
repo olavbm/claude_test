@@ -2,8 +2,8 @@ use minifb::{Key, Window, WindowOptions, KeyRepeat};
 use num_complex::Complex;
 use rayon::prelude::*;
 
-const WIDTH: usize = 1600; // Doubled width to show both sets
-const HEIGHT: usize = 800;
+const WIDTH: usize = 800;
+const HEIGHT: usize = 600;
 const MAX_ITER: u32 = 200;
 const JULIA_C: Complex<f64> = Complex::new(-0.4, 0.6); // Julia set constant
 
@@ -65,20 +65,8 @@ fn main() {
                 let screen_x = i % WIDTH;
                 let screen_y = i / WIDTH;
                 
-                // Calculate coordinates based on which half of the screen we're on
-                let (x, y) = if screen_x < WIDTH/2 {
-                    // Left side - Mandelbrot set
-                    (
-                        screen_x as f64 / (WIDTH/2) as f64 * scale - scale/2.0 + offset_x,
-                        screen_y as f64 / HEIGHT as f64 * scale - scale/2.0 + offset_y
-                    )
-                } else {
-                    // Right side - Julia set
-                    (
-                        (screen_x - WIDTH/2) as f64 / (WIDTH/2) as f64 * scale - scale/2.0 + offset_x,
-                        screen_y as f64 / HEIGHT as f64 * scale - scale/2.0 + offset_y
-                    )
-                };
+                let x = screen_x as f64 / WIDTH as f64 * scale - scale/2.0 + offset_x;
+                let y = screen_y as f64 / HEIGHT as f64 * scale - scale/2.0 + offset_y;
 
                 let point = Complex::new(x, y);
                 let mut z = if show_julia {
