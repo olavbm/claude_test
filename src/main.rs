@@ -1,15 +1,17 @@
 use minifb::{Key, Window, WindowOptions};
 use num_complex::Complex;
 
-const WIDTH: usize = 800;
-const HEIGHT: usize = 600;
+const WIDTH: usize = 1600; // Doubled width to show both sets
+const HEIGHT: usize = 800;
 const MAX_ITER: u32 = 200;
+const JULIA_C: Complex<f64> = Complex::new(-0.4, 0.6); // Julia set constant
 
 fn main() {
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
     let mut current_max_iter: u32 = 1;
+    let mut show_julia: bool = false;
     let mut window = Window::new(
-        "Mandelbrot Set - Press ESC to exit",
+        "Fractal Sets - Press SPACE to switch view, ESC to exit",
         WIDTH,
         HEIGHT,
         WindowOptions::default(),
@@ -48,18 +50,48 @@ fn main() {
     }
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
+        // Toggle between Mandelbrot and Julia sets
+        if window.is_key_pressed(Key::Space) {
+            show_julia = !show_julia;
+            current_max_iter = 1; // Reset animation
+        }
+
         if current_max_iter < MAX_ITER {
             current_max_iter += 1;
             
             // Update the visualization with new max_iter
             for (i, pixel) in buffer.iter_mut().enumerate() {
-                let x = (i % WIDTH) as f64 / WIDTH as f64 * scale - scale/2.0 + offset_x;
-                let y = (i / WIDTH) as f64 / HEIGHT as f64 * scale - scale/2.0 + offset_y;
+                let screen_x = i % WIDTH;
+                let screen_y = i / WIDTH;
                 
-                let c = Complex::new(x, y);
-                let mut z = Complex::new(0.0, 0.0);
-                let mut iter = 0;
+                // Calculate coordinates based on which half of the screen we're on
+                let (x, y) = if screen_x < WIDTH/2 {
+                    // Left side - Mandelbrot set
+                    (
+                        screen_x as f64 / (WIDTH/2) as f64 * scale - scale/2.0 + offset_x,
+                        screen_y as f64 / HEIGHT as f64 * scale - scale/2.0 + offset_y
+                    )
+                } else {
+                    // Right side - Julia set
+                    (
+                        (screen_x - WIDTH/2) as f64 / (WIDTH/2) as f64 * scale - scale/2.0 + offset_x,
+                        screen_y as f64 / HEIGHT as f64 * scale - scale/2.0 + offset_y
+                    )
+                };
 
+                let point = Complex::new(x, y);
+                let mut z = if show_julia {
+                    point // For Julia set, start with the point
+                } else {
+                    Complex::new(0.0, 0.0) // For Mandelbrot set, start at origin
+                };
+                let c = if show_julia {
+                    JULIA_C // For Julia set, use constant c
+                } else {
+                    point // For Mandelbrot set, use the point as c
+                };
+                
+                let mut iter = 0;
                 while iter < current_max_iter && z.norm_sqr() <= 4.0 {
                     z = z * z + c;
                     iter += 1;
