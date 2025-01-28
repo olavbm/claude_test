@@ -19,8 +19,8 @@ impl Particle {
                 rng.gen_range(-0.2..0.0) * 0.1,
                 rng.gen_range(-0.5..0.5) * 0.1,
             ),
-            color: Vec4::new(0.1, 0.3, 0.9, 0.8), // More transparent blue
-            life: rng.gen_range(0.5..1.0),
+            color: Vec4::new(0.2, 0.5, 1.0, 0.6), // Lighter, more transparent blue
+            life: rng.gen_range(0.8..1.0),
         }
     }
 }
@@ -52,10 +52,10 @@ impl ParticleSystem {
             particles,
             gravity: Vec3::new(0.0, -9.81, 0.0),
             rest_density: 1000.0,
-            pressure_constant: 1000.0,
-            viscosity: 0.1,
-            particle_mass: 0.02,
-            smoothing_radius: 0.1,
+            pressure_constant: 50.0,    // Lower for softer pressure response
+            viscosity: 0.018,          // Real water viscosity
+            particle_mass: 0.0002,      // Smaller particles
+            smoothing_radius: 0.05,     // Smaller interaction radius
         }
     }
 
@@ -102,11 +102,11 @@ impl ParticleSystem {
             for i in 0..3 {
                 if particle.position[i] < -1.0 {
                     particle.position[i] = -1.0;
-                    particle.velocity[i] *= -0.3; // More damping
+                    particle.velocity[i] *= -0.8; // Less damping for water-like bouncing
                 }
                 if particle.position[i] > 1.0 {
                     particle.position[i] = 1.0;
-                    particle.velocity[i] *= -0.3;
+                    particle.velocity[i] *= -0.8;
                 }
             }
             
