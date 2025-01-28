@@ -7,17 +7,6 @@ pub struct Particle {
     pub velocity: Vec3,
     pub color: Vec4,
     pub life: f32,
-    
-    fn kernel(&self, r: f32) -> f32 {
-        // Poly6 kernel function for SPH
-        let h = self.smoothing_radius;
-        if r > h {
-            return 0.0;
-        }
-        let h2 = h * h;
-        let h3 = h2 * h;
-        315.0 / (64.0 * std::f32::consts::PI * h3) * (h2 - r * r).powi(3)
-    }
 }
 
 impl Particle {
@@ -130,6 +119,17 @@ impl ParticleSystem {
                 ));
             }
         });
+    }
+
+    fn kernel(&self, r: f32) -> f32 {
+        // Poly6 kernel function for SPH
+        let h = self.smoothing_radius;
+        if r > h {
+            return 0.0;
+        }
+        let h2 = h * h;
+        let h3 = h2 * h;
+        315.0 / (64.0 * std::f32::consts::PI * h3) * (h2 - r * r).powi(3)
     }
 
     pub fn render(&self, buffer: &mut Vec<u32>, width: usize, height: usize) {
