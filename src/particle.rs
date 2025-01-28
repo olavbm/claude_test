@@ -7,6 +7,17 @@ pub struct Particle {
     pub velocity: Vec3,
     pub color: Vec4,
     pub life: f32,
+    
+    fn kernel(&self, r: f32) -> f32 {
+        // Poly6 kernel function for SPH
+        let h = self.smoothing_radius;
+        if r > h {
+            return 0.0;
+        }
+        let h2 = h * h;
+        let h3 = h2 * h;
+        315.0 / (64.0 * std::f32::consts::PI * h3) * (h2 - r * r).powi(3)
+    }
 }
 
 impl Particle {
@@ -15,11 +26,11 @@ impl Particle {
         Self {
             position,
             velocity: Vec3::new(
-                rng.gen_range(-1.0..1.0) * 0.1,
-                rng.gen_range(-1.0..1.0) * 0.1,
-                rng.gen_range(-1.0..1.0) * 0.1,
+                rng.gen_range(-0.5..0.5) * 0.1,
+                rng.gen_range(-0.2..0.0) * 0.1,
+                rng.gen_range(-0.5..0.5) * 0.1,
             ),
-            color: Vec4::new(0.2, 0.4, 0.8, 1.0), // Blue-ish water color
+            color: Vec4::new(0.1, 0.3, 0.9, 0.8), // More transparent blue
             life: rng.gen_range(0.5..1.0),
         }
     }
@@ -28,6 +39,11 @@ impl Particle {
 pub struct ParticleSystem {
     particles: Vec<Particle>,
     gravity: Vec3,
+    rest_density: f32,
+    pressure_constant: f32,
+    viscosity: f32,
+    particle_mass: f32,
+    smoothing_radius: f32,
 }
 
 impl ParticleSystem {
@@ -46,24 +62,72 @@ impl ParticleSystem {
         Self {
             particles,
             gravity: Vec3::new(0.0, -9.81, 0.0),
+            rest_density: 1000.0,
+            pressure_constant: 1000.0,
+            viscosity: 0.1,
+            particle_mass: 0.02,
+            smoothing_radius: 0.1,
         }
     }
 
     pub fn update(&mut self, dt: f32) {
-        self.particles.par_iter_mut().for_each(|p| {
-            p.velocity += self.gravity * dt;
-            p.position += p.velocity * dt;
-            p.life -= dt;
-
-            // Basic collision with ground
-            if p.position.y < -1.0 {
-                p.position.y = -1.0;
-                p.velocity.y *= -0.5; // Damping
+        // Calculate densities and pressures
+        let positions: Vec<Vec3> = self.particles.iter().map(|p| p.position).collect();
+        
+        self.particles.par_iter_mut().enumerate().for_each(|(i, particle)| {
+            let mut density = 0.0;
+            
+            // Calculate density at particle's position
+            for pos in &positions {
+                let r = particle.position.distance(*pos);
+                if r < self.smoothing_radius {
+                    density += self.particle_mass * self.kernel(r);
+                }
             }
-
-            // Reset dead particles
-            if p.life <= 0.0 {
-                *p = Particle::new(Vec3::new(0.0, 1.0, 0.0));
+            
+            // Calculate pressure force and viscosity force
+            let mut pressure_force = Vec3::ZERO;
+            let mut viscosity_force = Vec3::ZERO;
+            
+            for other in &self.particles {
+                let r = particle.position.distance(other.position);
+                if r > 0.0 && r < self.smoothing_radius {
+                    let dir = (other.position - particle.position) / r;
+                    
+                    // Pressure force
+                    let pressure = self.pressure_constant * (density - self.rest_density);
+                    pressure_force += dir * pressure * self.particle_mass / density;
+                    
+                    // Viscosity force
+                    viscosity_force += (other.velocity - particle.velocity) * self.viscosity;
+                }
+            }
+            
+            // Update velocity and position
+            let total_force = self.gravity + pressure_force / density + viscosity_force;
+            particle.velocity += total_force * dt;
+            particle.position += particle.velocity * dt;
+            particle.life -= dt * 0.1; // Slower life decrease
+            
+            // Boundary conditions
+            for i in 0..3 {
+                if particle.position[i] < -1.0 {
+                    particle.position[i] = -1.0;
+                    particle.velocity[i] *= -0.3; // More damping
+                }
+                if particle.position[i] > 1.0 {
+                    particle.position[i] = 1.0;
+                    particle.velocity[i] *= -0.3;
+                }
+            }
+            
+            // Reset dead particles near the top
+            if particle.life <= 0.0 {
+                *particle = Particle::new(Vec3::new(
+                    rand::thread_rng().gen_range(-0.5..0.5),
+                    0.8,
+                    rand::thread_rng().gen_range(-0.5..0.5),
+                ));
             }
         });
     }

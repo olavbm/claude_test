@@ -6,7 +6,7 @@ use particle::ParticleSystem;
 
 const WIDTH: usize = 800;
 const HEIGHT: usize = 600;
-const NUM_PARTICLES: usize = 10000;
+const NUM_PARTICLES: usize = 5000; // Reduced for better performance with SPH
 
 fn main() {
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
