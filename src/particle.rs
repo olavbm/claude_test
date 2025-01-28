@@ -65,12 +65,7 @@ impl ParticleSystem {
             if p.life <= 0.0 {
                 *p = Particle::new(Vec3::new(0.0, 1.0, 0.0));
             }
-        }).collect();
-
-        // Apply all changes to buffer
-        for (idx, color) in changes {
-            buffer[idx] = color;
-        }
+        });
     }
 
     pub fn render(&self, buffer: &mut Vec<u32>, width: usize, height: usize) {
@@ -101,7 +96,7 @@ impl ParticleSystem {
             // Basic perspective projection
             let z = p.position.z + 3.0; // Move camera back
             if z <= near || z >= far {
-                return;
+                return None;
             }
 
             let scale = 1.0 / (z * fov.tan());
@@ -118,13 +113,19 @@ impl ParticleSystem {
                     let diffuse = normal.dot(light_dir).max(0.2);
                     
                     let base_color = vec4_to_u32(p.color * diffuse);
-                    // Create a tuple of index and new color
                     Some((idx, blend_colors(buffer[idx], base_color, p.life as f32)))
                 } else {
                     None
                 }
+            } else {
+                None
             }
-        });
+        }).collect();
+
+        // Apply all changes to buffer
+        for (idx, color) in changes {
+            buffer[idx] = color;
+        }
     }
 }
 
