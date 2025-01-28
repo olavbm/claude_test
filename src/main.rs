@@ -3,10 +3,11 @@ use num_complex::Complex;
 
 const WIDTH: usize = 800;
 const HEIGHT: usize = 600;
-const MAX_ITER: u32 = 100;
+const MAX_ITER: u32 = 200;
 
 fn main() {
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
+    let mut current_max_iter: u32 = 1;
     let mut window = Window::new(
         "Mandelbrot Set - Press ESC to exit",
         WIDTH,
@@ -47,6 +48,32 @@ fn main() {
     }
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
+        if current_max_iter < MAX_ITER {
+            current_max_iter += 1;
+            
+            // Update the visualization with new max_iter
+            for (i, pixel) in buffer.iter_mut().enumerate() {
+                let x = (i % WIDTH) as f64 / WIDTH as f64 * scale - scale/2.0 + offset_x;
+                let y = (i / WIDTH) as f64 / HEIGHT as f64 * scale - scale/2.0 + offset_y;
+                
+                let c = Complex::new(x, y);
+                let mut z = Complex::new(0.0, 0.0);
+                let mut iter = 0;
+
+                while iter < current_max_iter && z.norm_sqr() <= 4.0 {
+                    z = z * z + c;
+                    iter += 1;
+                }
+
+                *pixel = if iter == current_max_iter {
+                    0x000000 // Black for points in the set
+                } else {
+                    let hue = (iter as f64 / current_max_iter as f64 * 360.0) as u32;
+                    hsv_to_rgb(hue, 100, 100)
+                };
+            }
+        }
+
         window
             .update_with_buffer(&buffer, WIDTH, HEIGHT)
             .unwrap();
