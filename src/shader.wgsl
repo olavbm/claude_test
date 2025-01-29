@@ -27,9 +27,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let rd = normalize(vec3<f32>(uv.x, uv.y, 1.0));
     
     // Ray marching parameters
-    let max_steps = 100;
-    let max_dist = 10.0;
-    let surf_dist = 0.001;
+    let max_steps = 50;
+    let max_dist = 8.0;
+    let surf_dist = 0.002;
     
     var total_dist = 0.0;
     var i = 0;
@@ -71,13 +71,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
 fn julia_de(p: vec3<f32>) -> f32 {
     var z = p;
-    let c = vec3<f32>(0.3, 0.5, 0.4); // Interesting Julia set parameter
+    let c = vec3<f32>(0.1, 0.2, 0.3); // Changed for faster convergence
     
     var dr = 1.0;
     var r = 0.0;
     
-    // Increase iterations for better detail
-    for(var i = 0; i < 30; i++) {
+    // Reduced iterations for better performance
+    for(var i = 0; i < 15; i++) {
         r = length(z);
         if (r > 2.0) { break; }
         
@@ -85,19 +85,18 @@ fn julia_de(p: vec3<f32>) -> f32 {
         var theta = acos(z.z / r);
         var phi = atan2(z.y, z.x);
         
-        // Scale and rotate the point
         dr = pow(r, 2.0) * 2.0 * dr;
         
-        // Convert back to Cartesian coordinates
-        var zr = r * r;
+        // Simplify calculations
         theta = theta * 2.0;
         phi = phi * 2.0;
         
+        let sin_theta = sin(theta);
         z = vec3<f32>(
-            sin(theta) * cos(phi),
-            sin(theta) * sin(phi),
+            sin_theta * cos(phi),
+            sin_theta * sin(phi),
             cos(theta)
-        ) * zr + c;
+        ) * (r * r) + c;
     }
     
     return 0.5 * log(r) * r / dr;
