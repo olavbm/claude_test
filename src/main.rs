@@ -1,34 +1,66 @@
-use minifb::{Key, Window, WindowOptions, KeyRepeat};
-use num_complex::Complex;
-use rayon::prelude::*;
+mod state;
 
-const WIDTH: usize = 800;
-const HEIGHT: usize = 600;
-const MAX_ITER: u32 = 200;
-const JULIA_C: Complex<f64> = Complex::new(-0.4, 0.6); // Julia set constant
+use state::State;
+use winit::{
+    event::*,
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
+};
 
-#[derive(PartialEq)]
-enum FractalType {
-    Mandelbrot,
-    Julia,
-    BurningShip,
-    Tricorn,
-    Newton
+async fn run() {
+    env_logger::init();
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new().build(&event_loop).unwrap();
+
+    let mut state = State::new(window).await;
+
+    event_loop.run(move |event, _, control_flow| {
+        match event {
+            Event::WindowEvent {
+                ref event,
+                window_id,
+            } if window_id == state.window().id() => {
+                if !state.input(event) {
+                    match event {
+                        WindowEvent::CloseRequested
+                        | WindowEvent::KeyboardInput {
+                            input:
+                                KeyboardInput {
+                                    state: ElementState::Pressed,
+                                    virtual_keycode: Some(VirtualKeyCode::Escape),
+                                    ..
+                                },
+                            ..
+                        } => *control_flow = ControlFlow::Exit,
+                        WindowEvent::Resized(physical_size) => {
+                            state.resize(*physical_size);
+                        }
+                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                            state.resize(**new_inner_size);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Event::RedrawRequested(window_id) if window_id == state.window().id() => {
+                state.update();
+                match state.render() {
+                    Ok(_) => {}
+                    Err(wgpu::SurfaceError::Lost) => state.resize(state.window().inner_size()),
+                    Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                    Err(e) => eprintln!("{:?}", e),
+                }
+            }
+            Event::MainEventsCleared => {
+                state.window().request_redraw();
+            }
+            _ => {}
+        }
+    });
 }
 
 fn main() {
-    let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
-    let mut current_max_iter: u32 = 1;
-    let mut fractal_type = FractalType::Mandelbrot;
-    let mut window = Window::new(
-        "Fractal Sets - Press 1-5 to switch fractals, ESC to exit",
-        WIDTH,
-        HEIGHT,
-        WindowOptions::default(),
-    )
-    .unwrap_or_else(|e| {
-        panic!("{}", e);
-    });
+    pollster::block_on(run());
 
     // Limit to max ~60 fps update rate
     window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
