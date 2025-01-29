@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-minifb = "0.25"
-num-complex = "0.4"
-rayon = "1.8"
+wgpu = "0.17"
+winit = "0.28"
+env_logger = "0.10"
+pollster = "0.3"
+bytemuck = { version = "1.13", features = ["derive"] }
+cgmath = "0.18"
