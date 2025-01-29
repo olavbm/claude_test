@@ -18,7 +18,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let uv = in.tex_coords * 2.0 - 1.0;
     
     // Ray origin and direction
-    let ro = vec3<f32>(0.0, 0.0, -2.0);
+    let ro = vec3<f32>(0.0, 0.0, -4.0);
     let rd = normalize(vec3<f32>(uv.x, uv.y, 1.0));
     
     // Ray marching parameters
@@ -47,10 +47,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
             
             // Create more interesting coloring based on normal and iterations
             let t = f32(i) / f32(max_steps);
+            // Enhanced coloring with better depth perception
             let color = vec3<f32>(
-                0.5 + 0.5 * normal.x,
-                0.2 + 0.5 * normal.y,
-                0.1 + t
+                0.5 + 0.5 * normal.x + 0.2 * t,
+                0.3 + 0.5 * normal.y + 0.1 * t,
+                0.4 + 0.5 * normal.z + 0.3 * t
             );
             
             return vec4<f32>(color, 1.0);
@@ -65,13 +66,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
 fn julia_de(p: vec3<f32>) -> f32 {
     var z = p;
-    let c = vec3<f32>(0.45, 0.2, -0.2); // More dramatic Julia set parameter
+    let c = vec3<f32>(0.3, 0.5, 0.4); // Interesting Julia set parameter
     
     var dr = 1.0;
     var r = 0.0;
     
     // Increase iterations for better detail
-    for(var i = 0; i < 20; i++) {
+    for(var i = 0; i < 30; i++) {
         r = length(z);
         if (r > 2.0) { break; }
         
