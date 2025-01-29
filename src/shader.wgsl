@@ -6,12 +6,13 @@ struct VertexOutput {
 @vertex
 fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
     var out: VertexOutput;
-    let vertices = array<vec2<f32>, 3>(
-        vec2<f32>(-1.0, -1.0),
-        vec2<f32>( 3.0, -1.0),
-        vec2<f32>(-1.0,  3.0)
-    );
-    let pos = vertices[in_vertex_index];
+    var pos = vec2<f32>(0.0, 0.0);
+    switch(in_vertex_index) {
+        case 0u: { pos = vec2<f32>(-1.0, -1.0); }
+        case 1u: { pos = vec2<f32>( 3.0, -1.0); }
+        case 2u: { pos = vec2<f32>(-1.0,  3.0); }
+        default: { pos = vec2<f32>(0.0, 0.0); }
+    }
     out.clip_position = vec4<f32>(pos, 0.0, 1.0);
     out.tex_coords = pos * 0.5 + 0.5;
     return out;
