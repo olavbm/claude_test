@@ -37,9 +37,23 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         total_dist += dist;
         
         if (dist < surf_dist) {
-            // Hit surface - calculate color based on iterations
+            // Calculate normal for better shading
+            let eps = vec3<f32>(0.001, 0.0, 0.0);
+            let normal = normalize(vec3<f32>(
+                julia_de(p + eps.xyy) - julia_de(p - eps.xyy),
+                julia_de(p + eps.yxy) - julia_de(p - eps.yxy),
+                julia_de(p + eps.yyx) - julia_de(p - eps.yyx)
+            ));
+            
+            // Create more interesting coloring based on normal and iterations
             let t = f32(i) / f32(max_steps);
-            return vec4<f32>(t, t * t, 1.0 - t, 1.0);
+            let color = vec3<f32>(
+                0.5 + 0.5 * normal.x,
+                0.2 + 0.5 * normal.y,
+                0.1 + t
+            );
+            
+            return vec4<f32>(color, 1.0);
         }
         
         i += 1;
@@ -51,12 +65,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
 fn julia_de(p: vec3<f32>) -> f32 {
     var z = p;
-    let c = vec3<f32>(0.4, 0.5, 0.6); // Julia set parameter
+    let c = vec3<f32>(0.45, 0.2, -0.2); // More dramatic Julia set parameter
     
     var dr = 1.0;
     var r = 0.0;
     
-    for(var i = 0; i < 15; i++) {
+    // Increase iterations for better detail
+    for(var i = 0; i < 20; i++) {
         r = length(z);
         if (r > 2.0) { break; }
         
