@@ -8,5 +8,5 @@ wgpu = "0.17"
 winit = "0.28"
 env_logger = "0.10"
 pollster = "0.3"
-bytemuck = { version = "1.13", features = ["derive"] }
+bytemuck = { version = "1.13", features = ["derive", "extern_crate_std"] }
 cgmath = "0.18"

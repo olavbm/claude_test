@@ -11,6 +11,9 @@ pub struct State {
     size: winit::dpi::PhysicalSize<u32>,
     window: Window,
     render_pipeline: wgpu::RenderPipeline,
+    time: f32,
+    time_buffer: wgpu::Buffer,
+    time_bind_group: wgpu::BindGroup,
 }
 
 impl State {
@@ -69,10 +72,41 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
         });
 
+        // Create time buffer and bind group
+        let time_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Time Buffer"),
+            size: std::mem::size_of::<f32>() as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        let time_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("Time Bind Group Layout"),
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+        });
+
+        let time_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Time Bind Group"),
+            layout: &time_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: time_buffer.as_entire_binding(),
+            }],
+        });
+
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[],
+                bind_group_layouts: &[&time_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -119,6 +153,9 @@ impl State {
             size,
             window,
             render_pipeline,
+            time: 0.0,
+            time_buffer,
+            time_bind_group,
         }
     }
 
@@ -140,7 +177,12 @@ impl State {
     }
 
     pub fn update(&mut self) {
-        // Will be implemented later
+        self.time += 0.016; // Approximately 60 FPS
+        self.queue.write_buffer(
+            &self.time_buffer,
+            0,
+            bytemuck::cast_slice(&[self.time]),
+        );
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -172,6 +214,7 @@ impl State {
                 depth_stencil_attachment: None,
             });
             render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.set_bind_group(0, &self.time_bind_group, &[]);
             render_pass.draw(0..3, 0..1);
         }
 

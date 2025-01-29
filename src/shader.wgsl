@@ -1,3 +1,6 @@
+@group(0) @binding(0)
+var<uniform> time: f32;
+
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) tex_coords: vec2<f32>,
@@ -71,7 +74,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
 fn julia_de(p: vec3<f32>) -> f32 {
     var z = p;
-    let c = vec3<f32>(0.1, 0.2, 0.3); // Changed for faster convergence
+    // Animate the Julia set parameters using sin waves
+    let c = vec3<f32>(
+        0.1 + 0.3 * sin(time * 0.5),
+        0.2 + 0.3 * cos(time * 0.3),
+        0.3 + 0.2 * sin(time * 0.4)
+    );
     
     var dr = 1.0;
     var r = 0.0;
