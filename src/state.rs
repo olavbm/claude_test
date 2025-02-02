@@ -186,9 +186,9 @@ impl State {
         
         // Update camera position with more dynamic movement
         self.camera_position = [
-            12.0 * self.camera_rotation.cos(),
-            8.0 * (self.time * 0.3).sin(), // More pronounced vertical movement
-            12.0 * self.camera_rotation.sin(),
+            18.0 * self.camera_rotation.cos(),
+            10.0 * (self.time * 0.3).sin(), // More pronounced vertical movement
+            18.0 * self.camera_rotation.sin(),
         ];
         
         // Keep camera_rotation bounded between 0 and 2π
