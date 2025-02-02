@@ -50,7 +50,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     
     // Ray setup with camera transform
     let ro = uniforms.camera_pos;
-    let rd = normalize(rot_matrix * vec3<f32>(uv.x, uv.y, 1.0));
+    let rd = normalize(rot_matrix * vec3<f32>(uv.x * 1.5, uv.y * 1.5, 1.0));
     
     // Ray marching parameters
     let max_steps = 50;

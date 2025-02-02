@@ -156,7 +156,7 @@ impl State {
             window,
             render_pipeline,
             time: 0.0,
-            camera_position: [0.0, 0.0, -4.0],
+            camera_position: [0.0, 0.0, -8.0],
             camera_rotation: 0.0,
             uniforms_buffer,
             uniforms_bind_group,
@@ -186,9 +186,9 @@ impl State {
         
         // Update camera position for circular motion
         self.camera_position = [
-            4.0 * self.camera_rotation.cos(),
-            2.0 * self.time.sin(),
-            4.0 * self.camera_rotation.sin(),
+            8.0 * self.camera_rotation.cos(),
+            3.0 * self.time.sin(),
+            8.0 * self.camera_rotation.sin(),
         ];
 
         // Pack uniforms into a slice (32 bytes total)
