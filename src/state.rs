@@ -77,7 +77,7 @@ impl State {
         // Create uniforms buffer and bind group
         let uniforms_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Uniforms Buffer"),
-            size: std::mem::size_of::<[f32; 6]>() as u64, // time + camera_position[3] + camera_rotation
+            size: std::mem::size_of::<[f32; 8]>() as u64, // time + camera_position[3] + camera_rotation + padding to 32 bytes
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -191,13 +191,15 @@ impl State {
             4.0 * self.camera_rotation.sin(),
         ];
 
-        // Pack uniforms into a slice
+        // Pack uniforms into a slice (32 bytes total)
         let uniforms = [
             self.time,
             self.camera_position[0],
             self.camera_position[1],
             self.camera_position[2],
             self.camera_rotation,
+            0.0, // padding
+            0.0, // padding
             0.0, // padding
         ];
 
