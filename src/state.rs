@@ -12,8 +12,10 @@ pub struct State {
     window: Window,
     render_pipeline: wgpu::RenderPipeline,
     time: f32,
-    time_buffer: wgpu::Buffer,
-    time_bind_group: wgpu::BindGroup,
+    camera_position: [f32; 3],
+    camera_rotation: f32,
+    uniforms_buffer: wgpu::Buffer,
+    uniforms_bind_group: wgpu::BindGroup,
 }
 
 impl State {
@@ -72,19 +74,19 @@ impl State {
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
         });
 
-        // Create time buffer and bind group
-        let time_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Time Buffer"),
-            size: std::mem::size_of::<f32>() as u64,
+        // Create uniforms buffer and bind group
+        let uniforms_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Uniforms Buffer"),
+            size: std::mem::size_of::<[f32; 6]>() as u64, // time + camera_position[3] + camera_rotation
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
 
-        let time_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("Time Bind Group Layout"),
+        let uniforms_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("Uniforms Bind Group Layout"),
             entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,
-                visibility: wgpu::ShaderStages::FRAGMENT,
+                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: false,
@@ -94,19 +96,19 @@ impl State {
             }],
         });
 
-        let time_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Time Bind Group"),
-            layout: &time_bind_group_layout,
+        let uniforms_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Uniforms Bind Group"),
+            layout: &uniforms_bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
-                resource: time_buffer.as_entire_binding(),
+                resource: uniforms_buffer.as_entire_binding(),
             }],
         });
 
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&time_bind_group_layout],
+                bind_group_layouts: &[&uniforms_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -154,8 +156,10 @@ impl State {
             window,
             render_pipeline,
             time: 0.0,
-            time_buffer,
-            time_bind_group,
+            camera_position: [0.0, 0.0, -4.0],
+            camera_rotation: 0.0,
+            uniforms_buffer,
+            uniforms_bind_group,
         }
     }
 
@@ -178,10 +182,29 @@ impl State {
 
     pub fn update(&mut self) {
         self.time += 0.016; // Approximately 60 FPS
+        self.camera_rotation += 0.002; // Slow rotation around the fractal
+        
+        // Update camera position for circular motion
+        self.camera_position = [
+            4.0 * self.camera_rotation.cos(),
+            2.0 * self.time.sin(),
+            4.0 * self.camera_rotation.sin(),
+        ];
+
+        // Pack uniforms into a slice
+        let uniforms = [
+            self.time,
+            self.camera_position[0],
+            self.camera_position[1],
+            self.camera_position[2],
+            self.camera_rotation,
+            0.0, // padding
+        ];
+
         self.queue.write_buffer(
-            &self.time_buffer,
+            &self.uniforms_buffer,
             0,
-            bytemuck::cast_slice(&[self.time]),
+            bytemuck::cast_slice(&uniforms),
         );
     }
 

@@ -1,5 +1,11 @@
+struct Uniforms {
+    time: f32,
+    camera_pos: vec3<f32>,
+    camera_rotation: f32,
+};
+
 @group(0) @binding(0)
-var<uniform> time: f32;
+var<uniform> uniforms: Uniforms;
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
@@ -17,7 +23,16 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
         default: { pos = vec2<f32>(0.0, 0.0); }
     }
     out.clip_position = vec4<f32>(pos, 0.0, 1.0);
-    out.tex_coords = pos * 0.5 + 0.5;
+    
+    // Calculate view direction based on camera position and rotation
+    let angle = uniforms.camera_rotation;
+    let rot_matrix = mat3x3<f32>(
+        cos(angle), 0.0, -sin(angle),
+        0.0, 1.0, 0.0,
+        sin(angle), 0.0, cos(angle)
+    );
+    
+    out.tex_coords = (rot_matrix * vec3<f32>(pos, 1.0)).xy;
     return out;
 }
 
@@ -25,9 +40,17 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let uv = in.tex_coords * 2.0 - 1.0;
     
-    // Ray origin and direction
-    let ro = vec3<f32>(0.0, 0.0, -4.0);
-    let rd = normalize(vec3<f32>(uv.x, uv.y, 1.0));
+    // Calculate view matrix
+    let angle = uniforms.camera_rotation;
+    let rot_matrix = mat3x3<f32>(
+        cos(angle), 0.0, -sin(angle),
+        0.0, 1.0, 0.0,
+        sin(angle), 0.0, cos(angle)
+    );
+    
+    // Ray setup with camera transform
+    let ro = uniforms.camera_pos;
+    let rd = normalize(rot_matrix * vec3<f32>(uv.x, uv.y, 1.0));
     
     // Ray marching parameters
     let max_steps = 50;
@@ -76,9 +99,9 @@ fn julia_de(p: vec3<f32>) -> f32 {
     var z = p;
     // Animate the Julia set parameters using sin waves
     let c = vec3<f32>(
-        0.1 + 0.3 * sin(time * 0.5),
-        0.2 + 0.3 * cos(time * 0.3),
-        0.3 + 0.2 * sin(time * 0.4)
+        0.1 + 0.3 * sin(uniforms.time * 0.5),
+        0.2 + 0.3 * cos(uniforms.time * 0.3),
+        0.3 + 0.2 * sin(uniforms.time * 0.4)
     );
     
     var dr = 1.0;
