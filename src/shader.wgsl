@@ -48,9 +48,14 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         sin(angle), 0.0, cos(angle)
     );
     
-    // Ray setup with camera transform
+    // Ray setup with camera looking at origin
     let ro = uniforms.camera_pos;
-    let rd = normalize(rot_matrix * vec3<f32>(uv.x * 1.5, uv.y * 1.5, 1.0));
+    let forward = normalize(-ro); // Direction to origin (0,0,0)
+    let right = normalize(cross(forward, vec3<f32>(0.0, 1.0, 0.0)));
+    let up = normalize(cross(right, forward));
+    
+    // Construct ray direction with wider field of view
+    let rd = normalize(forward + right * uv.x * 2.2 + up * uv.y * 2.2);
     
     // Ray marching parameters
     let max_steps = 50;
