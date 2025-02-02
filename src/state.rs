@@ -237,7 +237,7 @@ impl State {
                 depth_stencil_attachment: None,
             });
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_bind_group(0, &self.time_bind_group, &[]);
+            render_pass.set_bind_group(0, &self.uniforms_bind_group, &[]);
             render_pass.draw(0..3, 0..1);
         }
 
