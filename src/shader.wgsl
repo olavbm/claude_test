@@ -98,10 +98,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 fn julia_de(p: vec3<f32>) -> f32 {
     var z = p;
     // Animate the Julia set parameters using sin waves
+    // Animate the Julia set with bounded parameters
     let c = vec3<f32>(
-        0.1 + 0.3 * sin(uniforms.time * 0.5),
-        0.2 + 0.3 * cos(uniforms.time * 0.3),
-        0.3 + 0.2 * sin(uniforms.time * 0.4)
+        0.1 + 0.2 * sin(uniforms.time * 0.2),
+        0.2 + 0.2 * cos(uniforms.time * 0.15),
+        0.3 + 0.15 * sin(uniforms.time * 0.1)
     );
     
     var dr = 1.0;

@@ -184,12 +184,17 @@ impl State {
         self.time += 0.016; // Approximately 60 FPS
         self.camera_rotation += 0.002; // Slow rotation around the fractal
         
-        // Update camera position for circular motion
+        // Update camera position for circular motion with bounded oscillation
         self.camera_position = [
             8.0 * self.camera_rotation.cos(),
-            3.0 * self.time.sin(),
+            3.0 * (self.time * 0.5).sin(), // Slower vertical movement
             8.0 * self.camera_rotation.sin(),
         ];
+        
+        // Keep camera_rotation bounded between 0 and 2π
+        if self.camera_rotation > std::f32::consts::PI * 2.0 {
+            self.camera_rotation -= std::f32::consts::PI * 2.0;
+        }
 
         // Pack uniforms into a slice (32 bytes total)
         let uniforms = [
