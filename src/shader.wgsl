@@ -54,8 +54,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let right = normalize(cross(forward, vec3<f32>(0.0, 1.0, 0.0)));
     let up = normalize(cross(right, forward));
     
-    // Construct ray direction with wider field of view
-    let rd = normalize(forward + right * uv.x * 2.2 + up * uv.y * 2.2);
+    // Construct ray direction with adjusted field of view
+    let rd = normalize(forward + right * uv.x * 1.5 + up * uv.y * 1.5);
     
     // Ray marching parameters
     let max_steps = 100;
