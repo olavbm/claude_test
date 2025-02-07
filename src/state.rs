@@ -156,7 +156,7 @@ impl State {
             window,
             render_pipeline,
             time: 0.0,
-            camera_position: [0.0, 0.0, -8.0],
+            camera_position: [0.0, 0.0, -25.0],
             camera_rotation: 0.0,
             uniforms_buffer,
             uniforms_bind_group,
@@ -186,9 +186,9 @@ impl State {
         
         // Update camera position with more dynamic movement
         self.camera_position = [
-            18.0 * self.camera_rotation.cos(),
-            10.0 * (self.time * 0.3).sin(), // More pronounced vertical movement
-            18.0 * self.camera_rotation.sin(),
+            25.0 * self.camera_rotation.cos(),
+            15.0 * (self.time * 0.3).sin(), // More pronounced vertical movement
+            25.0 * self.camera_rotation.sin(),
         ];
         
         // Keep camera_rotation bounded between 0 and 2π
