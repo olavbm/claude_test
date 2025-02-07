@@ -184,7 +184,7 @@ impl State {
         self.time += 0.016; // Approximately 60 FPS
         
         // Keep camera at a fixed position that shows the whole fractal
-        self.camera_position = [0.0, 0.0, -80.0];
+        self.camera_position = [40.0, 40.0, -40.0];
 
         // Pack uniforms into a slice (32 bytes total)
         let uniforms = [
