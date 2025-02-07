@@ -182,19 +182,9 @@ impl State {
 
     pub fn update(&mut self) {
         self.time += 0.016; // Approximately 60 FPS
-        self.camera_rotation += 0.002; // Slow rotation around the fractal
         
-        // Update camera position with more dynamic movement
-        self.camera_position = [
-            25.0 * self.camera_rotation.cos(),
-            15.0 * (self.time * 0.3).sin(), // More pronounced vertical movement
-            25.0 * self.camera_rotation.sin(),
-        ];
-        
-        // Keep camera_rotation bounded between 0 and 2π
-        if self.camera_rotation > std::f32::consts::PI * 2.0 {
-            self.camera_rotation -= std::f32::consts::PI * 2.0;
-        }
+        // Keep camera at a fixed position that shows the whole fractal
+        self.camera_position = [0.0, 0.0, -25.0];
 
         // Pack uniforms into a slice (32 bytes total)
         let uniforms = [
