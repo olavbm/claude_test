@@ -58,9 +58,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let rd = normalize(forward + right * uv.x * 2.2 + up * uv.y * 2.2);
     
     // Ray marching parameters
-    let max_steps = 50;
-    let max_dist = 8.0;
-    let surf_dist = 0.002;
+    let max_steps = 100;
+    let max_dist = 100.0;
+    let surf_dist = 0.01;
     
     var total_dist = 0.0;
     var i = 0;
